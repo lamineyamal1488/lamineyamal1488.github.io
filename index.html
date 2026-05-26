@@ -151,7 +151,7 @@
     <section id="projects" class="page">
         <h2>Проекты и планы</h2>
         <div style="margin-top: 25px; text-align: center;">
-            <button class="nav-btn" onclick="loadRates()">Узнать курс ЦБ РФ напрямую</button>
+            <button class="nav-btn" onclick="loadRatesJsonp()">Узнать курс</button>
         </div>
         <div id="api-result-container" style="margin-top: 20px;"></div>
     </section>
@@ -165,38 +165,45 @@
         btn.classList.add('active');
     }
 
-    async function loadRates() {
+    function cbr_rates(data) {
+        const container = document.getElementById('api-result-container');
+        if (!data || !data.Valute) {
+            container.innerHTML = '<div class="project-card"><p>Не удалось обработать данные.</p></div>';
+            return;
+        }
+
+        const usdPrice = data.Valute.USD.Value.toFixed(2);
+        const euroPrice = data.Valute.EUR.Value.toFixed(2);
+
+        container.innerHTML = `
+            <div class="project-card" style="border-color: #10b981;">
+                <h3>Официальный курс ЦБ РФ:</h3>
+                <p style="margin: 8px 0;">💵 Доллар (USD): <strong>${usdPrice} ₽</strong></p>
+                <p style="margin: 8px 0;">💶 Евро (EUR): <strong>${euroPrice} ₽</strong></p>
+                <small style="color: #64748b;">Загружено в обход CORS защиты браузера</small>
+            </div>
+        `;
+        
+        const oldScript = document.getElementById('jsonp-cbr-script');
+        if (oldScript) oldScript.remove();
+    }
+
+    function loadRatesJsonp() {
         const container = document.getElementById('api-result-container');
         container.innerHTML = '<div class="project-card"><p>Запрос в Центробанк...</p></div>';
+
+        const oldScript = document.getElementById('jsonp-cbr-script');
+        if (oldScript) oldScript.remove();
+
+        const script = document.createElement('script');
+        script.id = 'jsonp-cbr-script';
+        script.src = 'https://cbr-xml-daily.ru';
         
-        const url = 'https://cbr-xml-daily.ru';
-        
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Ошибка сервера');
-            
-            const data = await response.json();
-            
-            const usdPrice = data.Valute.USD.Value.toFixed(2);
-            const euroPrice = data.Valute.EUR.Value.toFixed(2);
-            
-            container.innerHTML = `
-                <div class="project-card" style="border-color: #10b981;">
-                    <h3>Официальный курс ЦБ РФ:</h3>
-                    <p style="margin: 8px 0;">💵 Доллар (USD): <strong>${usdPrice} ₽</strong></p>
-                    <p style="margin: 8px 0;">💶 Евро (EUR): <strong>${euroPrice} ₽</strong></p>
-                    <small style="color: #64748b;">Обновлено напрямую без ошибок сети</small>
-                </div>
-            `;
-        } catch (error) {
-            console.error(error);
-            container.innerHTML = `
-                <div class="project-card" style="border-color: #ef4444;">
-                    <h3>Ошибка сети при вызове API</h3>
-                    <p>Браузер заблокировал прямой запрос. Попробуйте обновить страницу через <strong>Ctrl + F5</strong>.</p>
-                </div>
-            `;
-        }
+        script.onerror = function() {
+            container.innerHTML = '<div class="project-card"><p>Ошибка сети. Проверьте интернет-соединение.</p></div>';
+        };
+
+        document.body.appendChild(script);
     }
 </script>
 
