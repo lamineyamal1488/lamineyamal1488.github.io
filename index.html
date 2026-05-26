@@ -158,11 +158,52 @@
 </div>
 
 <script>
+    const GITHUB_USERNAME = 'lamineyamal1488';
+
     function showPage(pageId, btn) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(pageId).classList.add('active');
         btn.classList.add('active');
+    }
+
+    async function fetchGitHubData() {
+        try {
+            const userResponse = await fetch(`https://github.com{GITHUB_USERNAME}`);
+            if (userResponse.ok) {
+                const userData = await userResponse.json();
+                if (userData.bio) {
+                    document.getElementById('github-bio').textContent = `Статус с GitHub: ${userData.bio}`;
+                }
+            }
+            const reposResponse = await fetch(`https://github.com{GITHUB_USERNAME}/repos?sort=updated&per_page=3`);
+            if (reposResponse.ok) {
+                const repos = await reposResponse.json();
+                const repoListDiv = document.getElementById('repo-list');
+                
+                if (repos.length > 0) {
+                    repoListDiv.innerHTML = ''; 
+                    
+                    repos.forEach(repo => {
+                        const card = document.createElement('div');
+                        card.className = 'project-card';
+                        card.style.marginBottom = '15px'; 
+                        
+                        card.innerHTML = `
+                            <h3>${repo.name}</h3>
+                            <p>${repo.description || 'Описание проекта отсутствует.'}</p>
+                            <a href="${repo.html_url}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;">Открыть на GitHub →</a>
+                        `;
+                        repoListDiv.appendChild(card);
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка работы с API:', error);
+        }
+    }
+
+    window.onload = fetchGitHubData;
     }
 </script>
 
