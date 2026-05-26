@@ -151,7 +151,7 @@
     <section id="projects" class="page">
         <h2>Проекты и планы</h2>
         <div style="margin-top: 25px; text-align: center;">
-            <button class="nav-btn" onclick="loadRandomFact()">Узнать курс BTC напрямую через API</button>
+            <button class="nav-btn" onclick="loadRates()">Узнать курс ЦБ РФ напрямую</button>
         </div>
         <div id="api-result-container" style="margin-top: 20px;"></div>
     </section>
@@ -165,31 +165,37 @@
         btn.classList.add('active');
     }
 
-    async function loadRandomFact() {
+    async function loadRates() {
         const container = document.getElementById('api-result-container');
-        container.innerHTML = '<div class="project-card"><p>Связь с биржей...</p></div>';
+        container.innerHTML = '<div class="project-card"><p>Запрос в Центробанк...</p></div>';
+        
+        const url = 'https://cbr-xml-daily.ru';
         
         try {
-            const response = await fetch('https://binance.com');
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Ошибка сервера');
             
-            if (response.ok) {
-                const data = await response.json();
-                const price = Math.round(data.price);
-                
-                container.innerHTML = `
-                    <div class="project-card" style="border-color: #10b981;">
-                        <h3>Данные биржи получены успешно:</h3>
-                        <p>Текущая стоимость <strong>Bitcoin (BTC)</strong> составляет:</p>
-                        <h4 style="font-size: 1.3rem; margin: 10px 0; color: #10b981;">$ ${price.toLocaleString()} USD</h4>
-                        <small style="color: #64748b;">Запрос выполнен напрямую из файла браузера</small>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = '<div class="project-card"><p>Сервер биржи временно занят. Попробуй еще раз.</p></div>';
-            }
+            const data = await response.json();
+            
+            const usdPrice = data.Valute.USD.Value.toFixed(2);
+            const euroPrice = data.Valute.EUR.Value.toFixed(2);
+            
+            container.innerHTML = `
+                <div class="project-card" style="border-color: #10b981;">
+                    <h3>Официальный курс ЦБ РФ:</h3>
+                    <p style="margin: 8px 0;">💵 Доллар (USD): <strong>${usdPrice} ₽</strong></p>
+                    <p style="margin: 8px 0;">💶 Евро (EUR): <strong>${euroPrice} ₽</strong></p>
+                    <small style="color: #64748b;">Обновлено напрямую без ошибок сети</small>
+                </div>
+            `;
         } catch (error) {
             console.error(error);
-            container.innerHTML = '<div class="project-card"><p>Не удалось обойти защиту браузера. Проверь интернет.</p></div>';
+            container.innerHTML = `
+                <div class="project-card" style="border-color: #ef4444;">
+                    <h3>Ошибка сети при вызове API</h3>
+                    <p>Браузер заблокировал прямой запрос. Попробуйте обновить страницу через <strong>Ctrl + F5</strong>.</p>
+                </div>
+            `;
         }
     }
 </script>
