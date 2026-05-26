@@ -154,6 +154,11 @@
             <h3>Учебная практика</h3>
             <p>Сейчас я формирую портфолио из небольших учебных проектов. Скоро добавлю ссылки на мои первые работы</p>
         </div>
+        
+        <div style="margin-top: 25px; text-align: center;">
+            <button class="nav-btn" onclick="loadRandomFact()">Нажать</button>
+        </div>
+        <div id="api-result-container" style="margin-top: 20px;"></div>
     </section>
 </div>
 
@@ -164,8 +169,8 @@
         document.getElementById(pageId).classList.add('active');
         btn.classList.add('active');
     }
-    
-  async function loadRandomFact() {
+
+    async function loadRandomFact() {
         const container = document.getElementById('api-result-container');
         container.innerHTML = '<div class="project-card"><p>Загрузка шутки...</p></div>';
         
