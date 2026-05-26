@@ -36,7 +36,6 @@
             font-size: 0.95rem;
         }
 
-       
         nav {
             display: flex;
             justify-content: center;
@@ -121,6 +120,21 @@
             padding: 15px;
             border-radius: 0 8px 8px 0;
         }
+
+        .celebrity-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .celebrity-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -151,7 +165,7 @@
     <section id="projects" class="page">
         <h2>Проекты и планы</h2>
         <div style="margin-top: 25px; text-align: center;">
-            <button class="nav-btn" onclick="loadTimeApi()">Проверить API</button>
+            <button class="nav-btn" onclick="loadCelebrity()">Узнать личность</button>
         </div>
         <div id="api-result-container" style="margin-top: 20px;"></div>
     </section>
@@ -165,28 +179,58 @@
         btn.classList.add('active');
     }
 
-    async function loadTimeApi() {
+    const backupCelebrities = [
+        { name: "Илон Маск", photo: "https://unsplash.com" },
+        { name: "Киану Ривз", photo: "https://unsplash.com" },
+        { name: "Брэд Питт", photo: "https://unsplash.com" },
+        { name: "Анджелина Джоли", photo: "https://unsplash.com" },
+        { name: "Марк Цукерберг", photo: "https://unsplash.com" }
+    ];
+
+    async function loadCelebrity() {
         const container = document.getElementById('api-result-container');
-        container.innerHTML = '<div class="project-card"><p>Запрос к серверу времени...</p></div>';
+        container.innerHTML = '<div class="project-card"><p>Запрос к базе данных популярных личностей...</p></div>';
         
         try {
-            const response = await fetch('https://timeapi.io');
+            const response = await fetch('https://randomuser.me');
+            
             if (response.ok) {
                 const data = await response.json();
+                const user = data.results[0];
                 
+                const fullName = `${user.name.first} ${user.name.last}`;
+                const photoUrl = user.picture.medium;
+
                 container.innerHTML = `
                     <div class="project-card" style="border-color: #10b981;">
-                        <h3>Ответ от API получен!</h3>
-                        <p>Текущая дата: <strong>${data.date}</strong></p>
-                        <p>Точное время: <strong>${data.time}</strong></p>
-                        <small style="color: #64748b;">Статус: 200 OK (Успешно)</small>
+                        <h3>Личность успешно сгенерирована!</h3>
+                        <div class="celebrity-box">
+                            <img class="celebrity-img" src="${photoUrl}" alt="${fullName}">
+                            <div>
+                                <p style="margin: 0;">Имя: <strong>${fullName}</strong></p>
+                                <small style="color: #64748b;">Локация: ${user.location.country}</small>
+                            </div>
+                        </div>
                     </div>
                 `;
             } else {
-                container.innerHTML = '<div class="project-card"><p>Сервер времени не ответил.</p></div>';
+                throw new Error("Ошибка сервера");
             }
         } catch (error) {
-            container.innerHTML = '<div class="project-card"><p>Ошибка подключения к API.</p></div>';
+            const randomBackup = backupCelebrities[Math.floor(Math.random() * backupCelebrities.length)];
+            
+            container.innerHTML = `
+                <div class="project-card" style="border-color: #f59e0b;">
+                    <h3>Получено из локального списка (Резерв)</h3>
+                    <div class="celebrity-box">
+                        <img class="celebrity-img" src="${randomBackup.photo}" alt="${randomBackup.name}">
+                        <div>
+                            <p style="margin: 0;">Имя: <strong>${randomBackup.name}</strong></p>
+                            <small style="color: #64748b;">Статус: Избранное</small>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
     }
 </script>
