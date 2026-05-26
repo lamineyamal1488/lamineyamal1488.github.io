@@ -150,11 +150,6 @@
 
     <section id="projects" class="page">
         <h2>Проекты и планы</h2>
-        <div class="project-card">
-            <h3>Учебная практика</h3>
-            <p>Сейчас я формирую портфолио из небольших учебных проектов. Скоро добавлю ссылки на мои первые работы</p>
-        </div>
-        
         <div style="margin-top: 25px; text-align: center;">
             <button class="nav-btn" onclick="loadRandomFact()">Нажать</button>
         </div>
@@ -176,25 +171,34 @@
         
         try {
             const response = await fetch('https://jokeapi.dev');
-            if (response.ok) {
-                const data = await response.json();
-                
-                let jokeText = '';
-                if (data.type === 'single') {
-                    jokeText = `<p>${data.joke}</p>`;
-                } else {
-                    jokeText = `<p><strong>${data.setup}</strong></p><p><em>→ ${data.delivery}</em></p>`;
-                }
-
-                container.innerHTML = `
-                    <div class="project-card" style="border-color: #10b981;">
-                        <h3>Шутка из API:</h3>
-                        ${jokeText}
-                    </div>
-                `;
+            if (!response.ok) throw new Error('Ошибка сервера');
+            
+            const data = await response.json();
+            let rawJoke = '';
+            
+            if (data.type === 'single') {
+                rawJoke = data.joke;
             } else {
-                container.innerHTML = '<div class="project-card"><p>Ошибка сервера API. Попробуйте еще раз.</p></div>';
+                rawJoke = `${data.setup}\n\n${data.delivery}`;
             }
+
+            const translateResponse = await fetch(`https://translated.net{encodeURIComponent(rawJoke)}&langpair=en|ru`);
+            let translatedJoke = rawJoke;
+            
+            if (translateResponse.ok) {
+                const translateData = await translateResponse.json();
+                translatedJoke = translateData.responseData.translatedText;
+            }
+
+            const formattedJoke = translatedJoke.replace(/\n/g, '<br>');
+
+            container.innerHTML = `
+                <div class="project-card" style="border-color: #10b981;">
+                    <h3>Шутка из API:</h3>
+                    <p>${formattedJoke}</p>
+                </div>
+            `;
+            
         } catch (error) {
             console.error(error);
             container.innerHTML = '<div class="project-card"><p>Ошибка сети при вызове API.</p></div>';
