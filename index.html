@@ -101,17 +101,8 @@
             object-fit: cover;
             border: 2px solid var(--primary);
             background: #e2e8f0;
+            flex-shrink: 0;
         }
-        
-        .wiki-link {
-            display: inline-block;
-            margin-top: 8px;
-            color: var(--primary);
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        .wiki-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -133,14 +124,14 @@
     <section id="skills" class="page">
         <h2>Навыки</h2>
         <div class="project-card">
-            <p>Умею интегрировать открытые мировые API (Wikipedia API) без ограничений CORS.</p>
+            <p>Пока нету</p>
         </div>
     </section>
 
     <section id="projects" class="page">
         <h2>Проекты и планы</h2>
         <div style="margin-top: 25px; text-align: center;">
-            <button class="nav-btn" onclick="getAnyHumanFromWiki()">Найти случайного человека</button>
+            <button class="nav-btn" onclick="getCatFactAndAuthor()">Сгенерировать факт</button>
         </div>
         <div id="api-result-container" style="margin-top: 20px;"></div>
     </section>
@@ -154,63 +145,71 @@
         btn.classList.add('active');
     }
 
-    async function getAnyHumanFromWiki() {
+    const firstNames = ["Александр", "Дмитрий", "Иван", "Максим", "Сергей", "Джон", "Роберт", "Уильям", "Анна", "Мария", "Елена", "Эмили", "София"];
+    const lastNames = ["Иванов", "Петров", "Смирнов", "Сергеев", "Кузнецов", "Смит", "Джонсон", "Уильямс", "Браун", "Миллер"];
+    const countries = ["Россия", "США", "Великобритания", "Германия", "Франция", "Канада", "Италия", "Австралия"];
+
+    async function getCatFactAndAuthor() {
         const container = document.getElementById('api-result-container');
-        container.innerHTML = '<div class="project-card"><p>Ищу случайного человека в архивах Википедии...</p></div>';
-        
-        const baseWikiApi = "https://wikipedia.org";
+        container.innerHTML = '<div class="project-card"><p>Запрос к Cat Facts API...</p></div>';
         
         try {
-            const randomYear = Math.floor(Math.random() * (2005 - 1940 + 1)) + 1940;
-            const categoryName = `Категория:Родившиеся_в_${randomYear}_году`;
+            const response = await fetch('https://herokuapp.com');
             
-            const listUrl = `${baseWikiApi}&list=categorymembers&cmtitle=${encodeURIComponent(categoryName)}&cmlimit=500`;
-            const listResponse = await fetch(listUrl);
-            const listData = await listResponse.json();
-            const members = listData.query.categorymembers;
+            if (!response.ok) throw new Error("Ошибка ответа сервера");
             
-            const humanPages = members.filter(m => m.ns === 0);
+            const data = await response.json();
             
-            if (humanPages.length === 0) throw new Error("Люди не найдены");
+            const catFactText = data.text || "Кошки спят около 70% своей жизни.";
             
-            const randomPerson = humanPages[Math.floor(Math.random() * humanPages.length)];
-
-            const detailUrl = `${baseWikiApi}&prop=pageimages|extractsummary&piprop=original&exintro=&explaintext=&pageids=${randomPerson.pageid}`;
-            const detailResponse = await fetch(detailUrl);
-            const detailData = await detailResponse.json();
+            const randomName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            const fullName = `${randomName} ${randomLastName}`;
+            const country = countries[Math.floor(Math.random() * countries.length)];
             
-            const page = detailData.query.pages[randomPerson.pageid];
-            
-            let name = page.title;
-            if (name.includes(',')) {
-                const parts = name.split(',');
-                name = `${parts[1].trim()} ${parts[0].trim()}`;
-            }
-            
-            const photo = page.original ? page.original.source : "https://unsplash.com";
-            
-            const summary = page.extract ? page.extract.split('.')[0] + '.' : "Информация о деятельности отсутствует в краткой выжимке.";
-            const wikiLink = `https://wikipedia.org{page.pageid}`;
+            const randomId = Math.floor(Math.random() * 5000);
+            const photoUrl = `https://robohash.org{randomId}.png?set=set4`; 
 
             container.innerHTML = `
                 <div class="project-card" style="border-color: #10b981;">
-                    <h3>Личность найдена!</h3>
+                    <h3>Данные из Cat Facts API получены!</h3>
                     <div class="celebrity-box">
-                        <img class="celebrity-img" src="${photo}" alt="${name}">
+                        <img class="celebrity-img" src="${photoUrl}" alt="${fullName}">
                         <div>
-                            <p style="margin: 0;">Имя: <strong>${name}</strong></p>
-                            <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #475569;">${summary}</p>
-                            <a href="${wikiLink}" target="_blank" class="wiki-link">Читать полную биографию на Википедии →</a>
+                            <p style="margin: 0;">Автор факта: <strong>${fullName}</strong></p>
+                            <small style="color: #64748b;">Страна: ${country} | Профессия: Фелинолог (эксперт по кошкам)</small>
+                            <p style="margin: 10px 0 0 0; font-size: 0.95rem; color: #1e293b; font-style: italic;">
+                                "${catFactText}"
+                            </p>
                         </div>
                     </div>
                 </div>
             `;
             
         } catch (error) {
+            const backupFacts = [
+                "У кошек по 5 пальцев на передних лапах, но только по 4 на задних.",
+                "Кошки могут издавать около 100 различных звуков.",
+                "Отпечаток носа каждой кошки уникален, как отпечатки пальцев человека."
+            ];
+            const randomBackupFact = backupFacts[Math.floor(Math.random() * backupFacts.length)];
+            const randomName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            
             container.innerHTML = `
-                <div class="project-card" style="border-color: #ef4444;">
-                    <p>Не удалось получить данные. Попробуйте еще раз.</p>
-                </div>`;
+                <div class="project-card" style="border-color: #f59e0b;">
+                    <h3>Получено из резервной базы (API временно не ответил)</h3>
+                    <div class="celebrity-box">
+                        <img class="celebrity-img" src="https://robohash.org" alt="Эксперт">
+                        <div>
+                            <p style="margin: 0;">Автор: <strong>${randomName} ${randomLastName}</strong></p>
+                            <p style="margin: 10px 0 0 0; font-size: 0.95rem; color: #1e293b; font-style: italic;">
+                                "${randomBackupFact}"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
     }
 </script>
