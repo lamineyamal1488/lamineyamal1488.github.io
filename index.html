@@ -163,6 +163,8 @@
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(pageId).classList.add('active');
         btn.classList.add('active');
+    }
+    
   async function loadApiProjects() {
         try {
             const response = await fetch('https://typicode.com');
