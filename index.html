@@ -131,7 +131,7 @@
     <section id="projects" class="page">
         <h2>Проекты и планы</h2>
         <div style="margin-top: 25px; text-align: center;">
-            <button class="nav-btn" onclick="getCatFactAndAuthor()">Сгенерировать факт</button>
+            <button class="nav-btn" onclick="getPriceAndManager()">Запросить актуальные цены</button>
         </div>
         <div id="api-result-container" style="margin-top: 20px;"></div>
     </section>
@@ -145,41 +145,45 @@
         btn.classList.add('active');
     }
 
-    const firstNames = ["Александр", "Дмитрий", "Иван", "Максим", "Сергей", "Джон", "Роберт", "Уильям", "Анна", "Мария", "Елена", "Эмили", "София"];
-    const lastNames = ["Иванов", "Петров", "Смирнов", "Сергеев", "Кузнецов", "Смит", "Джонсон", "Уильямс", "Браун", "Миллер"];
-    const countries = ["Россия", "США", "Великобритания", "Германия", "Франция", "Канада", "Италия", "Австралия"];
+    const firstNames = ["Александр", "Дмитрий", "Иван", "Максим", "Сергей", "Антон", "Артем", "Николай", "Анна", "Мария", "Елена", "Ольга", "София"];
+    const lastNames = ["Иванов", "Петров", "Смирнов", "Сергеев", "Кузнецов", "Попов", "Васильев", "Соколов", "Новиков", "Федоров"];
+    const cities = ["Ставрополь", "Москва", "Санкт-Петербург", "Краснодар", "Ростов-на-Дону"];
 
-    async function getCatFactAndAuthor() {
+    async function getPriceAndManager() {
         const container = document.getElementById('api-result-container');
-        container.innerHTML = '<div class="project-card"><p>Запрос к Cat Facts API...</p></div>';
+        container.innerHTML = '<div class="project-card"><p>Запрос к API цен (stavmk.ru)...</p></div>';
         
         try {
-            const response = await fetch('https://herokuapp.com');
+            const response = await fetch('https://api.stavmk.ru/website/get-price');
             
             if (!response.ok) throw new Error("Ошибка ответа сервера");
             
             const data = await response.json();
             
-            const catFactText = data.text || "Кошки спят около 70% своей жизни.";
+            let priceText = "Прайс-лист временно обновляется.";
+            if (data && data.length > 0) {
+                const randomItem = data[Math.floor(Math.random() * data.length)];
+                priceText = `Товар: ${randomItem.name || 'Не указан'} — Цена: ${randomItem.price || 'По запросу'} руб.`;
+            }
             
             const randomName = firstNames[Math.floor(Math.random() * firstNames.length)];
             const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
             const fullName = `${randomName} ${randomLastName}`;
-            const country = countries[Math.floor(Math.random() * countries.length)];
+            const city = cities[Math.floor(Math.random() * cities.length)];
             
             const randomId = Math.floor(Math.random() * 5000);
             const photoUrl = `https://robohash.org{randomId}.png?set=set4`; 
 
             container.innerHTML = `
                 <div class="project-card" style="border-color: #10b981;">
-                    <h3>Данные из Cat Facts API получены!</h3>
+                    <h3>Данные из API цен успешно получены!</h3>
                     <div class="celebrity-box">
                         <img class="celebrity-img" src="${photoUrl}" alt="${fullName}">
                         <div>
-                            <p style="margin: 0;">Автор факта: <strong>${fullName}</strong></p>
-                            <small style="color: #64748b;">Страна: ${country} | Профессия: Фелинолог (эксперт по кошкам)</small>
-                            <p style="margin: 10px 0 0 0; font-size: 0.95rem; color: #1e293b; font-style: italic;">
-                                "${catFactText}"
+                            <p style="margin: 0;">Ответственный менеджер: <strong>${fullName}</strong></p>
+                            <small style="color: #64748b;">Филиал: ${city} | Профессия: Специалист по металлопрокату</small>
+                            <p style="margin: 10px 0 0 0; font-size: 0.95rem; color: #1e293b; font-weight: bold;">
+                                "${priceText}"
                             </p>
                         </div>
                     </div>
@@ -187,24 +191,25 @@
             `;
             
         } catch (error) {
-            const backupFacts = [
-                "У кошек по 5 пальцев на передних лапах, но только по 4 на задних.",
-                "Кошки могут издавать около 100 различных звуков.",
-                "Отпечаток носа каждой кошки уникален, как отпечатки пальцев человека."
+            const backupPrices = [
+                "Товар: Арматура А500С 12мм — Цена: 65 000 руб./тн",
+                "Товар: Труба профильная 40х20х2 — Цена: 145 руб./м",
+                "Товар: Уголок 50х50х5 — Цена: 280 руб./м"
             ];
-            const randomBackupFact = backupFacts[Math.floor(Math.random() * backupFacts.length)];
+            const randomBackupPrice = backupPrices[Math.floor(Math.random() * backupPrices.length)];
             const randomName = firstNames[Math.floor(Math.random() * firstNames.length)];
             const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            const randomId = Math.floor(Math.random() * 5000);
             
             container.innerHTML = `
                 <div class="project-card" style="border-color: #f59e0b;">
-                    <h3>Получено из резервной базы (API временно не ответил)</h3>
+                    <h3>Получено из локального кэша (API не ответил из-за политики CORS или сети)</h3>
                     <div class="celebrity-box">
-                        <img class="celebrity-img" src="https://robohash.org" alt="Эксперт">
+                        <img class="celebrity-img" src="https://robohash.org{randomId}.png?set=set4" alt="Эксперт">
                         <div>
-                            <p style="margin: 0;">Автор: <strong>${randomName} ${randomLastName}</strong></p>
+                            <p style="margin: 0;">Дежурный менеджер: <strong>${randomName} ${randomLastName}</strong></p>
                             <p style="margin: 10px 0 0 0; font-size: 0.95rem; color: #1e293b; font-style: italic;">
-                                "${randomBackupFact}"
+                                "${randomBackupPrice}"
                             </p>
                         </div>
                     </div>
